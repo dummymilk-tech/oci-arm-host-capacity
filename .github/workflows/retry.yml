@@ -2,8 +2,8 @@ name: OCI ARM Retry
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  
-  workflow_dispatch:        
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
 
 jobs:
   run:
@@ -14,14 +14,13 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
-          tools: composer:v2
+          php-version: '8.3'
 
-      - name: Get composer cache directory
+      - name: Get Composer Cache Directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - name: Cache composer dependencies
+      - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
@@ -34,23 +33,19 @@ jobs:
       - name: Create private key file
         run: echo "${{ secrets.OCI_PRIVATE_KEY }}" > ./oci_private_key.pem
 
-      - name: Create .env file
-        run: |
-          {
-            echo "OCI_USER_ID=${{ secrets.OCI_USER_ID }}"
-            echo "OCI_TENANCY_ID=${{ secrets.OCI_TENANCY_ID }}"
-            echo "OCI_KEY_FINGERPRINT=${{ secrets.OCI_KEY_FINGERPRINT }}"
-            echo "OCI_PRIVATE_KEY_FILENAME=./oci_private_key.pem"
-            echo "OCI_REGION=ap-singapore-2"
-            echo "OCI_SUBNET_ID=ocid1.subnet.oc1.ap-singapore-2.aaaaaaaacgl54um6ota5imhcfjfuzhuam6jp5g4cjkeaxypglsx2q6l5luha"
-            echo "OCI_AVAILABILITY_DOMAIN=jcfl:AP-SINGAPORE-2-AD-1"
-            echo "OCI_SSH_PUBLIC_KEY=${{ secrets.OCI_SSH_PUBLIC_KEY }}"
-            echo "OCI_OCPUS=4"
-            echo "OCI_MEMORY_IN_GBS=24"
-            echo "OCI_IMAGE_ID=ocid1.image.oc1.ap-singapore-2.aaaaaaaa4i3cteflq3mfvjffmxtmycc25wyvvuhkb2pynz35rynlyvmzymra"
-            echo "OCI_SHAPE=VM.Standard.A1.Flex"
-            echo "OCI_MAX_INSTANCES=1"
-          } > .env
-
       - name: Run script
         run: php index.php
+        env:
+          OCI_REGION: ap-singapore-2
+          OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
+          OCI_TENANCY_ID: ${{ secrets.OCI_TENANCY_ID }}
+          OCI_KEY_FINGERPRINT: ${{ secrets.OCI_KEY_FINGERPRINT }}
+          OCI_PRIVATE_KEY_FILENAME: ./oci_private_key.pem
+          OCI_AVAILABILITY_DOMAIN: jcfl:AP-SINGAPORE-2-AD-1
+          OCI_SUBNET_ID: ocid1.subnet.oc1.ap-singapore-2.aaaaaaaacgl54um6ota5imhcfjfuzhuam6jp5g4cjkeaxypglsx2q6l5luha
+          OCI_IMAGE_ID: ocid1.image.oc1.ap-singapore-2.aaaaaaaa4i3cteflq3mfvjffmxtmycc25wyvvuhkb2pynz35rynlyvmzymra
+          OCI_SHAPE: VM.Standard.A1.Flex
+          OCI_OCPUS: 4
+          OCI_MEMORY_IN_GBS: 24
+          OCI_MAX_INSTANCES: 1
+          OCI_SSH_PUBLIC_KEY: ${{ secrets.OCI_SSH_PUBLIC_KEY }}
