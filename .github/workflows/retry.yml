@@ -1,0 +1,44 @@
+name: OCI ARM Retry
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  
+  workflow_dispatch:        
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+
+      - name: Install dependencies
+        run: composer install --no-dev
+
+      - name: Create private key file
+        run: echo "${{ secrets.OCI_PRIVATE_KEY }}" > ./oci_private_key.pem
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          OCI_USER_ID=${{ secrets.OCI_USER_ID }}
+          OCI_TENANCY_ID=${{ secrets.OCI_TENANCY_ID }}
+          OCI_KEY_FINGERPRINT=${{ secrets.OCI_KEY_FINGERPRINT }}
+          OCI_PRIVATE_KEY_FILENAME=./oci_private_key.pem
+          OCI_REGION=ap-singapore-2
+          OCI_SUBNET_ID=ocid1.subnet.oc1.ap-singapore-2.aaaaaaaacgl54um6ota5imhcfjfuzhuam6jp5g4cjkeaxypglsx2q6l5luha
+          OCI_AVAILABILITY_DOMAIN=jcfl:AP-SINGAPORE-2-AD-1
+          OCI_SSH_PUBLIC_KEY=${{ secrets.OCI_SSH_PUBLIC_KEY }}
+          OCI_OCPUS=4
+          OCI_MEMORY_IN_GBS=24
+          OCI_IMAGE_ID=ocid1.image.oc1.ap-singapore-2.aaaaaaaa4i3cteflq3mfvjffmxtmycc25wyvvuhkb2pynz35rynlyvmzymra
+          OCI_SHAPE=VM.Standard.A1.Flex
+          OCI_MAX_INSTANCES=1
+          EOF
+
+      - name: Run script
+        run: php index.php
